@@ -2,7 +2,7 @@
 
 Inventory management was a major challenge for an EPC construction company operating across 20+ active sites and managing over $29M in materials. Existing processes relied on spreadsheets and manual logs, which often led to discrepancies during reconciliation and slowed down decision-making. A previous digital attempt failed because the system was unintuitive and hard to sustain for on-site staff, many of whom had limited technical training and needed something simple, reliable, and mobile-friendly.
 
-To design a solution that would actually be adopted, I started by understanding the day-to-day workflow of site engineers and storekeepers—how shipments were logged, where errors crept in, and why the old system broke down. This discovery process revealed that the real bottleneck wasn’t just the technology, but its fit with the realities of on-site work.
+To design a solution that would actually be adopted, I started by understanding the day-to-day workflow of site engineers and storekeepers - how shipments were logged, where errors crept in, and why the old system broke down. This discovery process revealed that the real bottleneck wasn’t just the technology, but its fit with the realities of on-site work.
 
 With those insights, I built SiteStock, **focusing on three principles**:
 

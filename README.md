@@ -1,6 +1,6 @@
 # 🏗️ Construction Materials Inventory Management System
 
-A comprehensive web application for managing construction materials inventory across multiple sites. Built for construction companies to track steel, cement, stone chips, sand, and diesel inventory with role-based access control.
+A comprehensive web application for managing construction materials inventory across multiple sites. Built for an EPC construction company to track steel, cement, stone chips, sand, and diesel inventory with role-based access control.
 
 ## 📋 Table of Contents
 
@@ -38,12 +38,6 @@ A comprehensive web application for managing construction materials inventory ac
 - Site access permissions
 - Admin panel for user and site management
 - Authentication with secure sessions
-
-### 🎨 UI/UX
-- Modern, clean interface built with React
-- Mobile-first responsive design
-- Intuitive navigation with breadcrumbs
-- Real-time loading states and error handling
 
 ## 🛠️ Tech Stack
 
@@ -195,24 +189,31 @@ The application uses the following main database tables:
 
 ## 📸 Screenshots
 
-*Screenshots can be added here to showcase the application interface*
+![1](https://github.com/user-attachments/assets/4f29309f-52bd-4362-9c16-e2d78e751371)
+_Inventory Management for a Site_
 
-<!-- Add screenshots of:
-- Login page
-- Dashboard/Site selection
-- Inventory management interface
-- Mobile responsive design
-- Admin panel
--->
+![2](https://github.com/user-attachments/assets/921e7153-e0dc-46c4-a790-e4a8896a8ec4)
+_Current Inventory for Steel in a Site_
 
-## 🔒 Why Database Connection is Not Included
+![3](https://github.com/user-attachments/assets/fa0f3786-f7a3-4bc6-b98f-e0536bd7c246)
+_Stock Summary for Steel in a Site_
 
-This repository is prepared for recruitment/portfolio purposes and **intentionally excludes**:
+![4](https://github.com/user-attachments/assets/36854b5b-0820-4bfe-a82b-55a21f0227de)
+_Adding an Incoming Shipment of Steel for a Site_
 
-- **Database credentials** - Supabase URL and API keys removed for security
-- **Company-specific data** - No real inventory or user data
-- **Production configurations** - Environment variables not included
-- **Proprietary information** - Company details anonymized
+![5](https://github.com/user-attachments/assets/6b458c76-5f7f-4073-b980-063fa5125b48)
+_Logging an Outgoing Shipment of Steel for a Site_
+
+![6](https://github.com/user-attachments/assets/7ffadcda-9dba-4a92-8f71-61540c4eb88e)
+_Transaction History for all Shipments of Steel for a Site_
+
+![7](https://github.com/user-attachments/assets/1e0d19cd-2a87-4bb1-80ab-99465e081947)
+_Managing/ Editing a Site Details (Exclusively Available to the Super Admin)_
+
+![Site Name](https://github.com/user-attachments/assets/f5122728-f5fc-4fbd-b265-5a3eb9b406dc)
+_Admin Panel to Control User Permission Levels/ Site Access_
+
+Note: This repository intentionally excludes database credentials, company-specific data, production configurations and proprietary information.
 
 ### What's Missing for Full Deployment:
 1. Supabase project setup and configuration
@@ -221,7 +222,7 @@ This repository is prepared for recruitment/portfolio purposes and **intentional
 4. User authentication setup
 5. Production build deployment
 
-### For Demonstration:
+### What this repository includes:
 The codebase showcases:
 - ✅ Complete React application architecture
 - ✅ Modern development practices
@@ -229,29 +230,3 @@ The codebase showcases:
 - ✅ State management patterns
 - ✅ Component organization
 - ✅ Error handling and loading states
-
-## 🤝 Contributing
-
-This project demonstrates professional development practices including:
-
-- **Clean Code Architecture**: Modular components and clear separation of concerns
-- **Modern React Patterns**: Hooks, context, and functional components
-- **Responsive Design**: Mobile-first approach with desktop optimization
-- **Security Best Practices**: Environment variable management and secure authentication
-- **Code Quality**: ESLint configuration and consistent formatting
-
-## 📄 License
-
-This project is for demonstration purposes. Please contact the author for usage permissions.
-
-## 👨‍💻 Developer
-
-**Anvesha** - Full Stack Developer
-- Built comprehensive inventory management system
-- Implemented role-based access control
-- Created responsive, mobile-friendly interface
-- Integrated real-time database functionality
-
----
-
-*This project demonstrates expertise in React, modern JavaScript, database design, user authentication, responsive design, and full-stack application development.*

@@ -1,6 +1,20 @@
 # 🏗️ Construction Materials Inventory Management System
 
-A comprehensive web application for managing construction materials inventory across multiple sites. Built for an EPC construction company to track steel, cement, stone chips, sand, and diesel inventory with role-based access control.
+Inventory management was a major challenge for an EPC construction company operating across 20+ active sites and managing over $29M in materials. Existing processes relied on spreadsheets and manual logs, which often led to discrepancies during reconciliation and slowed down decision-making. A previous digital attempt failed because the system was unintuitive and hard to sustain for on-site staff, many of whom had limited technical training and needed something simple, reliable, and mobile-friendly.
+
+To design a solution that would actually be adopted, I started by understanding the day-to-day workflow of site engineers and storekeepers—how shipments were logged, where errors crept in, and why the old system broke down. This discovery process revealed that the real bottleneck wasn’t just the technology, but its fit with the realities of on-site work.
+
+With those insights, I built SiteStock, **focusing on three principles**:
+
+**Usability first** → a mobile-first, intuitive UI designed for quick updates in the field, with minimal training required.
+
+**Trust through transparency** → role-based access, real-time sync, and auditable logs gave managers confidence without overburdening staff.
+
+**Scalable engineering** → a Supabase backend with granular permissions, secure authentication, and optimized data flows to support multi-site operations.
+
+I also iterated with feedback loops, demoing early prototypes to site staff and refining features to remove friction. By treating adoption as a core engineering goal, not an afterthought, SiteStock became a tool people wanted to use.
+
+Since launch, the platform has cut inventory errors and reconciliation time by 35%, while giving leadership real-time visibility into inventory movements and discrepancies across all sites. It has successfully flagged discrepancies in shipments, helping the company reduce losses and enforce accountability.
 
 ## 📋 Table of Contents
 

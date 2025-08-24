@@ -224,7 +224,7 @@ _Transaction History for all Shipments of Steel for a Site_
 ![7](https://github.com/user-attachments/assets/1e0d19cd-2a87-4bb1-80ab-99465e081947)
 _Managing/ Editing a Site Details (Exclusively Available to the Super Admin)_
 
-![Site Name](https://github.com/user-attachments/assets/f5122728-f5fc-4fbd-b265-5a3eb9b406dc)
+![Site Name (1)](https://github.com/user-attachments/assets/a23bfa02-2dc7-4a1f-8b90-d3c5c804f306)
 _Admin Panel to Control User Permission Levels/ Site Access_
 
 Note: This repository intentionally excludes database credentials, company-specific data, production configurations and proprietary information.

@@ -626,6 +626,97 @@ async def export_movements(
     return _csv_response(rows, "movements.csv", headers)
 
 
+# --- XLSX exports --------------------------------------------------------
+from openpyxl import Workbook
+from openpyxl.styles import Font, PatternFill, Alignment
+from openpyxl.utils import get_column_letter
+
+
+def _xlsx_response(rows: List[dict], headers: List[str], filename: str,
+                   widths: List[int] = None, row_fill_key: str = None) -> StreamingResponse:
+    wb = Workbook()
+    ws = wb.active
+    ws.title = filename.replace(".xlsx", "")[:31]
+    header_font = Font(bold=True, color="FFFFFF")
+    header_fill = PatternFill("solid", fgColor="111827")
+    fills = {
+        "OUT":  PatternFill("solid", fgColor="FEE2E2"),
+        "LOW":  PatternFill("solid", fgColor="FEF3C7"),
+        "HIGH": PatternFill("solid", fgColor="DBEAFE"),
+    }
+    ws.append(headers)
+    for i, _ in enumerate(headers, 1):
+        c = ws.cell(row=1, column=i)
+        c.font = header_font
+        c.fill = header_fill
+        c.alignment = Alignment(horizontal="left", vertical="center")
+    ws.freeze_panes = "A2"
+    for r in rows:
+        ws.append([r.get(h, "") for h in headers])
+        if row_fill_key and r.get(row_fill_key) in fills:
+            fill = fills[r[row_fill_key]]
+            for col in range(1, len(headers) + 1):
+                ws.cell(row=ws.max_row, column=col).fill = fill
+    for i, w in enumerate(widths or [18] * len(headers), 1):
+        ws.column_dimensions[get_column_letter(i)].width = w
+    ws.auto_filter.ref = ws.dimensions
+    buf = io.BytesIO()
+    wb.save(buf)
+    buf.seek(0)
+    return StreamingResponse(
+        iter([buf.getvalue()]),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+@api.get("/export/stock.xlsx")
+async def export_stock_xlsx(user: dict = Depends(get_current_user), site_id: Optional[str] = None):
+    if user["role"] != "admin":
+        site_id = user.get("site_id")
+    rows = await compute_stock(site_id)
+    headers = ["site_name", "item_name", "category", "unit", "inward", "outward",
+               "consumption", "stock", "min_stock", "max_stock", "rate", "value", "status"]
+    widths = [18, 28, 18, 8, 10, 10, 12, 10, 10, 10, 10, 14, 10]
+    return _xlsx_response(rows, headers, "stock_register.xlsx", widths, row_fill_key="status")
+
+
+@api.get("/export/invoices.xlsx")
+async def export_invoices_xlsx(user: dict = Depends(get_current_user), site_id: Optional[str] = None):
+    flt = scope_site_filter(user, site_id)
+    invs = await db.invoices.find(flt, {"_id": 0}).to_list(5000)
+    rows = []
+    for inv in invs:
+        for line in inv.get("lines", []):
+            rows.append({
+                "invoice_number": inv["invoice_number"], "invoice_date": inv["invoice_date"],
+                "supplier_name": inv["supplier_name"], "site_id": inv["site_id"],
+                "item_name": line["item_name"], "quantity": line["quantity"],
+                "unit": line["unit"], "rate": line["rate"], "amount": line["amount"],
+                "gst_percent": inv.get("gst_percent", 0), "total": inv.get("total", 0),
+            })
+    headers = ["invoice_number", "invoice_date", "supplier_name", "site_id",
+               "item_name", "quantity", "unit", "rate", "amount", "gst_percent", "total"]
+    widths = [16, 14, 22, 24, 26, 10, 8, 12, 14, 12, 14]
+    return _xlsx_response(rows, headers, "invoices.xlsx", widths)
+
+
+@api.get("/export/movements.xlsx")
+async def export_movements_xlsx(
+    user: dict = Depends(get_current_user),
+    site_id: Optional[str] = None,
+    mtype: Optional[str] = Query(None, alias="type"),
+):
+    flt = scope_site_filter(user, site_id)
+    if mtype:
+        flt["type"] = mtype
+    rows = await db.movements.find(flt, {"_id": 0}).sort("created_at", -1).to_list(20000)
+    headers = ["created_at", "type", "item_name", "site_id", "quantity",
+               "rate", "amount", "reference", "issued_to", "notes"]
+    widths = [22, 14, 24, 24, 10, 12, 14, 18, 18, 28]
+    return _xlsx_response(rows, headers, f"{mtype or 'movements'}.xlsx", widths)
+
+
 # --- Bootstrap -----------------------------------------------------------
 DEFAULT_CATEGORIES = ["Cement", "Steel / Rebar", "Bricks & Blocks", "Sand", "Aggregate",
                       "Tools", "Electrical", "Plumbing", "Paint", "Hardware"]

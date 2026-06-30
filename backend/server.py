@@ -182,6 +182,8 @@ class PhysicalCountIn(BaseModel):
     counted_qty: float
     notes: Optional[str] = ""
     adjust: bool = False
+    photo_path: Optional[str] = ""
+    photo_name: Optional[str] = ""
 
 
 
@@ -548,6 +550,8 @@ async def create_physical(data: PhysicalCountIn, user: dict = Depends(get_curren
         "system_qty": round(system_qty, 3),
         "variance": variance,
         "notes": data.notes,
+        "photo_path": data.photo_path or "",
+        "photo_name": data.photo_name or "",
         "adjusted": bool(data.adjust and variance != 0),
         "counted_by": user["id"],
         "counted_by_name": user.get("name", ""),

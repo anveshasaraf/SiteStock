@@ -14,6 +14,7 @@ import Movements from "./pages/Movements";
 import Stock from "./pages/Stock";
 import Users from "./pages/Users";
 import Reports from "./pages/Reports";
+import PhysicalStock from "./pages/PhysicalStock";
 
 function Guarded({ children, adminOnly = false }) {
   const { user, loading } = useAuth();
@@ -54,6 +55,7 @@ export default function App() {
             <Route path="/sites" element={<Guarded adminOnly><Sites /></Guarded>} />
             <Route path="/users" element={<Guarded adminOnly><Users /></Guarded>} />
             <Route path="/reports" element={<Reports />} />
+            <Route path="/physical-stock" element={<PhysicalStock />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

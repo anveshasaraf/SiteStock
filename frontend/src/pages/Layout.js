@@ -4,7 +4,7 @@ import { useAuth, api } from "../lib/auth";
 import {
   HardHat, House, Package, Buildings, Truck, Receipt,
   ArrowDown, ArrowUp, Fire, ChartBar, Users as UsersIcon,
-  SignOut, CaretDown, List, X,
+  SignOut, CaretDown, List, X, ClipboardText,
 } from "@phosphor-icons/react";
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent,
@@ -16,6 +16,7 @@ export const SiteContext = React.createContext({ sites: [], siteId: "", setSiteI
 const NAV = [
   { to: "/", label: "Dashboard", short: "Home", icon: House, end: true },
   { to: "/stock", label: "Stock Register", short: "Stock", icon: Package },
+  { to: "/physical-stock", label: "Physical Count", short: "Audit", icon: ClipboardText },
   { to: "/invoices", label: "Purchase Invoices", short: "Bills", icon: Receipt },
   { to: "/inward", label: "Inward Entry", short: "In", icon: ArrowDown },
   { to: "/outward", label: "Outward Issue", short: "Out", icon: ArrowUp },

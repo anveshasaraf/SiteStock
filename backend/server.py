@@ -176,6 +176,15 @@ class MovementIn(BaseModel):
     issued_to: Optional[str] = ""
 
 
+class PhysicalCountIn(BaseModel):
+    item_id: str
+    site_id: str
+    counted_qty: float
+    notes: Optional[str] = ""
+    adjust: bool = False
+
+
+
 # --- Auth Routes ---------------------------------------------------------
 @api.post("/auth/register")
 async def register(data: RegisterIn, response: Response):
@@ -502,6 +511,70 @@ async def get_stock(user: dict = Depends(get_current_user), site_id: Optional[st
     if user["role"] != "admin":
         site_id = user.get("site_id")
     return await compute_stock(site_id)
+
+
+# --- Physical Stock Audit ------------------------------------------------
+async def _system_stock(item_id: str, site_id: str) -> float:
+    cur = await db.movements.find({"item_id": item_id, "site_id": site_id}, {"_id": 0}).to_list(20000)
+    inw = sum(float(m["quantity"]) for m in cur if m["type"] == "inward")
+    out = sum(float(m["quantity"]) for m in cur if m["type"] in ("outward", "consumption"))
+    return inw - out
+
+
+@api.get("/physical-stock")
+async def list_physical(user: dict = Depends(get_current_user), site_id: Optional[str] = None):
+    if user["role"] != "admin":
+        site_id = user.get("site_id")
+    flt = {"site_id": site_id} if site_id else {}
+    return await db.physical_counts.find(flt, {"_id": 0}).sort("created_at", -1).to_list(2000)
+
+
+@api.post("/physical-stock")
+async def create_physical(data: PhysicalCountIn, user: dict = Depends(get_current_user)):
+    if user["role"] != "admin" and user.get("site_id") != data.site_id:
+        raise HTTPException(403, "Cannot count stock at another site")
+    item = await db.items.find_one({"id": data.item_id}, {"_id": 0})
+    if not item:
+        raise HTTPException(404, "Item not found")
+    system_qty = await _system_stock(data.item_id, data.site_id)
+    variance = round(data.counted_qty - system_qty, 3)
+    doc = {
+        "id": new_id(),
+        "item_id": data.item_id,
+        "item_name": item["name"],
+        "unit": item.get("unit", ""),
+        "site_id": data.site_id,
+        "counted_qty": data.counted_qty,
+        "system_qty": round(system_qty, 3),
+        "variance": variance,
+        "notes": data.notes,
+        "adjusted": bool(data.adjust and variance != 0),
+        "counted_by": user["id"],
+        "counted_by_name": user.get("name", ""),
+        "created_at": now_iso(),
+    }
+    await db.physical_counts.insert_one(doc)
+
+    if data.adjust and variance != 0:
+        mv_type = "inward" if variance > 0 else "outward"
+        rate = float(item.get("rate", 0))
+        await db.movements.insert_one({
+            "id": new_id(),
+            "item_id": data.item_id,
+            "item_name": item["name"],
+            "site_id": data.site_id,
+            "quantity": abs(variance),
+            "rate": rate,
+            "amount": round(abs(variance) * rate, 2),
+            "type": mv_type,
+            "reference": f"ADJ:{doc['id'][:8]}",
+            "notes": f"Stock audit adjustment ({'+' if variance > 0 else ''}{variance})",
+            "issued_to": "",
+            "created_by": user["id"],
+            "created_at": now_iso(),
+        })
+    doc.pop("_id", None)
+    return doc
 
 
 # --- Dashboard -----------------------------------------------------------

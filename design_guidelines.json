@@ -1,0 +1,103 @@
+{
+  "theme_and_archetype": {
+    "theme": "LIGHT",
+    "archetype": "Archetype 4 (Swiss & High-Contrast) customized for Industrial/Construction",
+    "reasoning": "The application is a data-heavy B2B internal tool for a construction company. It requires extreme clarity, authority, and function-first design. The 'Godly' architectural design standard prioritizes zero-friction navigation, precision, and raw structural integrity."
+  },
+  "typography": {
+    "rules": "The Anti-Default Rule applies. Inter is strictly banned for headings.",
+    "fonts": {
+      "headings": "Cabinet Grotesk",
+      "body": "IBM Plex Sans",
+      "mono": "IBM Plex Mono"
+    },
+    "hierarchy": {
+      "h1": "text-4xl sm:text-5xl font-bold tracking-tight",
+      "h2": "text-2xl sm:text-3xl font-bold tracking-tight",
+      "h3": "text-xl sm:text-2xl font-semibold",
+      "h4": "text-lg sm:text-xl font-medium",
+      "body": "text-base leading-relaxed",
+      "small_labels": "text-xs tracking-[0.2em] uppercase font-bold text-zinc-500"
+    }
+  },
+  "colors": {
+    "background": {
+      "app": "#FFFFFF",
+      "sidebar": "#FAFAFA",
+      "surface": "#FFFFFF"
+    },
+    "text": {
+      "primary": "#09090B",
+      "secondary": "#52525B"
+    },
+    "accents": {
+      "primary": "#2563EB",
+      "warning": "#F59E0B",
+      "critical": "#DC2626",
+      "success": "#16A34A"
+    },
+    "borders": {
+      "default": "#E4E4E7",
+      "focus": "#2563EB"
+    },
+    "contrast_rules": "Strict APCA/WCAG AA compliance. Dark text on light backgrounds. Color is used ONLY for status (status badges, charts) and primary actions. Never for decoration."
+  },
+  "spacing_and_layout": {
+    "grid_system": "MODE B: THE 'CONTROL ROOM' GRID (For Dashboards). Tight gaps (gap-4 or gap-6). High density.",
+    "spacing_scale": "p-4, p-6, p-8. Use generous internal padding within data cards to prevent clutter.",
+    "surface_strategy": "GRID BORDERS (The 'Technical' Look). Expose the skeleton. Container uses border-collapse style layout. Items have 1px solid borders (border-zinc-200). NO soft drop shadows. Use flat, hard-edged containers with max 4px border-radius (rounded-sm).",
+    "alignment": "Left-align all data tables, form inputs, and labels. Right-align numerical values in tables (rates, totals, stock quantities)."
+  },
+  "component_rules": {
+    "general": "Always use pure HTML+Tailwind for layout shells. Use heavily customized Shadcn components for interactive elements.",
+    "tables": "Crucial for Inward/Outward entries and Stock Register. Use sticky headers. Dense rows. Alternating row colors (zinc-50/white) for scanability.",
+    "forms": "Use Shadcn Input, Select, and Calendar (for invoice dates). Labels must be bold. Input fields should have crisp 1px borders, turning blue on focus.",
+    "cards": "Avoid default Shadcn Card shadow. Override with shadow-none and border-zinc-200.",
+    "buttons": "Primary: Solid Industrial Blue. Secondary: Outline with transparent background, black text, and grey border. Danger: Solid Signal Red.",
+    "navigation": "Fixed sidebar for desktop (multi-site selector at the top), sticky top header for mobile. The site selector must be a highly visible dropdown."
+  },
+  "motion_and_interactions": {
+    "hover_states": "All buttons must change brightness on hover. Table rows must have hover:bg-zinc-100.",
+    "transitions": "Fast and snappy. transition-colors duration-150 ease-in-out.",
+    "loading": "Use skeleton loaders for dashboard charts and tables. No playful spinners."
+  },
+  "icons_and_assets": {
+    "library": "Phosphor Icons (@phosphor-icons/react) - Best for dense dashboards and industrial precision.",
+    "usage": "Use icons sparingly. Primarily in the sidebar navigation, status badges, and action buttons (e.g., Export CSV)."
+  },
+  "image_urls": {
+    "backgrounds_and_heroes": [
+      {
+        "url": "https://images.unsplash.com/photo-1694521787162-5373b598945c?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzNTl8MHwxfHNlYXJjaHwxfHxjb25zdHJ1Y3Rpb24lMjBzaXRlJTIwbW9kZXJuJTIwY29uY3JldGV8ZW58MHx8fHwxNzgyODEwMzIwfDA&ixlib=rb-4.1.0&q=85",
+        "description": "Modern concrete construction site overhead view. Use for Login screen background with a heavy bg-white/80 overlay."
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1519143009590-e3800b9df468?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzNTl8MHwxfHNlYXJjaHwzfHxjb25zdHJ1Y3Rpb24lMjBzaXRlJTIwbW9kZXJuJTIwY29uY3JldGV8ZW58MHx8fHwxNzgyODEwMzIwfDA&ixlib=rb-4.1.0&q=85",
+        "description": "Industrial racks and structures. Alternate login background."
+      }
+    ],
+    "logos": [
+      {
+        "url": "https://images.unsplash.com/photo-1769984867572-10dea95bd4f1?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2NDF8MHwxfHNlYXJjaHwxfHxtaW5pbWFsaXN0JTIwY29tcGFueSUyMGxvZ298ZW58MHx8fHwxNzgyODEwMzIwfDA&ixlib=rb-4.1.0&q=85",
+        "description": "Minimalist placeholder logo for the construction firm if needed for invoices."
+      }
+    ],
+    "avatars": [
+      {
+        "url": "https://images.unsplash.com/photo-1646227655685-a530813759b3?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzB8MHwxfHNlYXJjaHwzfHxjb25zdHJ1Y3Rpb24lMjB3b3JrZXIlMjBwb3J0cmFpdHxlbnwwfHx8fDE3ODI4MTAzMjF8MA&ixlib=rb-4.1.0&q=85",
+        "description": "Avatar for Site Manager / User profile."
+      }
+    ]
+  },
+  "testing_requirements": {
+    "data_testid_rule": "CRITICAL: All interactive and key informational elements MUST include a data-testid attribute. Use kebab-case and role-based naming (e.g., data-testid='login-submit-button', data-testid='inward-entry-row-1', data-testid='site-selector-dropdown')."
+  },
+  "instructions_to_main_agent": {
+    "file_extensions": "CRITICAL: Use .js (and .jsx semantics inside .js) for all React files. DO NOT use .tsx or .ts files.",
+    "styling_engine": "Tailwind CSS + customized Shadcn UI primitives. Stick strictly to the Archetype 4 design system.",
+    "auth": "Implement JWT-based custom authentication.",
+    "key_features": "Ensure Low/High stock analysis handles both manual per-item thresholds AND auto-calculated limits from consumption history. Export to CSV/Excel is mandatory for inventory, invoices, and consumption.",
+    "multi_site": "Implement a global context or state for the 'Selected Site'. Admins see aggregate, users see restricted views.",
+    "dependencies_to_install": "yarn add @phosphor-icons/react recharts date-fns react-day-picker clsx tailwind-merge"
+  }
+}

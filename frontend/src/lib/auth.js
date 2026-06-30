@@ -67,6 +67,24 @@ export function AuthProvider({ children }) {
 
 export const useAuth = () => useContext(AuthCtx);
 
+export async function downloadFile(path, filename = "download.csv") {
+  const t = localStorage.getItem("bt_token");
+  const res = await fetch(`${API}${path}`, {
+    headers: t ? { Authorization: `Bearer ${t}` } : {},
+    credentials: "include",
+  });
+  if (!res.ok) throw new Error(`Download failed (${res.status})`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
 export function formatErr(detail) {
   if (!detail) return "Something went wrong.";
   if (typeof detail === "string") return detail;

@@ -101,10 +101,10 @@ export default function Invoices() {
     await api.delete(`/invoices/${id}`); load();
   };
 
-  const exportCsv = () => {
-    const t = localStorage.getItem("bt_token");
-    const url = `${API}/export/invoices${siteId ? `?site_id=${siteId}` : ""}`;
-    window.open(`${url}${url.includes("?") ? "&" : "?"}token=${t || ""}`, "_self");
+  const exportCsv = async () => {
+    const path = `/export/invoices${siteId ? `?site_id=${siteId}` : ""}`;
+    try { await (await import("../lib/auth")).downloadFile(path, "invoices.csv"); }
+    catch (e) { toast.error(e.message || "Download failed"); }
   };
 
   const setSupplier = (id) => {

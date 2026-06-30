@@ -56,12 +56,13 @@ export default function Movements({ mode }) {
     } catch (e) { toast.error(formatErr(e.response?.data?.detail)); }
   };
 
-  const exportCsv = () => {
-    const t = localStorage.getItem("bt_token");
+  const exportCsv = async () => {
     const params = new URLSearchParams({ type: mode });
     if (siteId) params.set("site_id", siteId);
-    if (t) params.set("token", t);
-    window.open(`${API}/export/movements?${params.toString()}`, "_self");
+    try {
+      const mod = await import("../lib/auth");
+      await mod.downloadFile(`/export/movements?${params.toString()}`, `${mode}.csv`);
+    } catch (e) { toast.error(e.message || "Download failed"); }
   };
 
   const meta = META[mode];

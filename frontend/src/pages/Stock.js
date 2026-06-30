@@ -26,10 +26,12 @@ export default function Stock() {
     [r.item_name, r.category, r.site_name].join(" ").toLowerCase().includes(q.toLowerCase())
   ), [rows, q, status]);
 
-  const exportCsv = () => {
-    const t = localStorage.getItem("bt_token");
-    const url = `${API}/export/stock${siteId ? `?site_id=${siteId}` : ""}`;
-    window.open(`${url}${url.includes("?") ? "&" : "?"}token=${t || ""}`, "_self");
+  const exportCsv = async () => {
+    const path = `/export/stock${siteId ? `?site_id=${siteId}` : ""}`;
+    try {
+      const mod = await import("../lib/auth");
+      await mod.downloadFile(path, "stock_register.csv");
+    } catch (e) { /* eslint-disable-next-line no-alert */ alert(e.message || "Download failed"); }
   };
 
   return (

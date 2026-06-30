@@ -1,0 +1,58 @@
+{
+  "summary": "First-finish testing of BuildTrack inventory app. Backend auth, sites, categories, items, suppliers, invoice (with auto-inward), movements, stock, dashboard, multi-site enforcement, and CSV exports all functional. Frontend login, navigation across 11 sidebar items, and Site creation work. Item creation modal opens but Category select (Radix) did not yield a selectable option in automation, leaving the dialog open and blocking subsequent Reports verification.",
+  "tested_scope": ["backend", "frontend", "auth", "integration"],
+  "passed": [
+    "POST /api/auth/login admin@buildtrack.com -> 200 with access_token + user{role:admin}",
+    "GET /api/auth/me with Bearer token returns admin user",
+    "POST /api/sites (admin) creates site; GET /api/sites lists it (count>=2)",
+    "site_user POST /api/sites -> 403 'Admin access required'",
+    "GET /api/categories returns 10 default seeded categories (Cement, Steel/Rebar, ...)",
+    "POST /api/categories creates editable category",
+    "POST/GET/PUT /api/items works (min_stock/max_stock honored)",
+    "POST/GET /api/suppliers works",
+    "POST /api/invoices (with supplier_name, invoice_date, lines[item_name,unit,rate,amount]) computes subtotal=17500, gst_amount, total correctly; auto-creates inward movement with reference 'INV:INV-T3'",
+    "POST /api/movements type=consumption decreases stock; site_user posting movement for another site -> 403",
+    "GET /api/stock returns per-site/per-item rows with inward/outward/consumption/stock/status (OK/LOW/OUT/HIGH); site_user sees only their own site rows",
+    "GET /api/dashboard returns low_stock_count=2, after big inward+max_stock=10 returns high_stock_count=1",
+    "CSV exports /api/export/stock|invoices|movements?type=inward -> 200 text/csv with correct headers",
+    "Frontend redirects / to /login when unauth",
+    "Admin UI login -> Dashboard 'Control Room' visible",
+    "All 11 sidebar nav links navigate correctly (dashboard, stock, invoices, inward, outward, consumption, items, suppliers, reports, sites, users)",
+    "Admin creates Site via UI; new site appears in Sites grid"
+  ],
+  "failed": [
+    {
+      "area": "Backend - Invoice schema mismatch with spec",
+      "issue": "Spec says POST /api/invoices uses gst_rate and lines[{item_id, quantity, unit_price}]; actual API requires supplier_name, invoice_date, gst_percent (not gst_rate), and lines[{item_id, item_name, unit, quantity, rate, amount}]. Sending gst_rate is silently ignored (stored gst_percent=0). Frontend Invoices.js must send the full payload incl. supplier_name, invoice_date, gst_percent.",
+      "evidence": "First POST with spec shape returned 422 missing fields; second POST with full shape returned 200. gst_rate=18 in payload produced gst_percent=0 in stored invoice.",
+      "priority": "MEDIUM"
+    },
+    {
+      "area": "Frontend - Item creation Category select",
+      "issue": "On Items page, opening 'Add Item' modal and clicking item-category-select trigger does not reliably open the Radix dropdown / no option becomes clickable. Save without category leaves dialog open (Category is required), and overlay then blocks other clicks. Recommend either: (a) use a native <select> with data-testid options like item-category-option-Cement, or (b) ensure trigger opens dropdown and add data-testids on options.",
+      "evidence": "Playwright clicked [data-testid=item-category-select], waited, then tried get_by_text('Cement') -- click succeeded but dialog remained open; later nav-reports click failed because DialogOverlay intercepted pointer events.",
+      "priority": "MEDIUM"
+    },
+    {
+      "area": "Frontend - Dashboard chart warnings",
+      "issue": "Recharts emits repeated 'width(-1) and height(-1) of chart should be greater than 0' warnings on initial dashboard render. Cosmetic but indicates ResponsiveContainer parent has zero dimensions on mount.",
+      "evidence": "Multiple CONSOLE[warning] entries from recharts on /dashboard.",
+      "priority": "LOW"
+    },
+    {
+      "area": "Frontend - Accessibility",
+      "issue": "Radix DialogContent missing Description / aria-describedby (a11y warning).",
+      "evidence": "CONSOLE[warning]: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.",
+      "priority": "LOW"
+    }
+  ],
+  "action_items": [
+    "Verify frontend Invoices.js sends supplier_name, invoice_date, gst_percent (not gst_rate), and full line fields (item_name, unit, rate, amount). If using gst_rate in UI, map it to gst_percent before POST -- otherwise GST will always be 0.",
+    "Fix Items page Category select: ensure clicking the trigger opens the dropdown and options are selectable; add data-testid on each option (e.g. item-category-option-Cement) so save flow can complete. Without this, users cannot create items via UI.",
+    "Optional: add aria-describedby/DialogDescription to all Radix DialogContent components.",
+    "Optional: ensure ResponsiveContainer wrapper has explicit minHeight to avoid -1 size warning on first mount."
+  ],
+  "success_rate": {"backend": "100%", "frontend": "~75% (login + nav + site create OK; item create UI blocked by category select; invoice/consumption/reports UI not fully verified due to overlay block)"},
+  "retest_needed": true,
+  "full_testing_deferred": true
+}

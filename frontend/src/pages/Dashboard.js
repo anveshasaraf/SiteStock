@@ -35,7 +35,7 @@ export default function Dashboard() {
   if (!data) return <div className="p-10 text-zinc-500">Loading dashboard…</div>;
 
   return (
-    <div className="px-8 py-8 space-y-8">
+    <div className="px-4 sm:px-8 py-6 sm:py-8 space-y-8">
       <header className="flex items-end justify-between gap-4 flex-wrap">
         <div>
           <div className="bt-eyebrow">Overview</div>

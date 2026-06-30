@@ -15,11 +15,13 @@ from typing import Optional, List, Literal
 
 import bcrypt
 import jwt
-from fastapi import FastAPI, APIRouter, HTTPException, Depends, Request, Response, Query
-from fastapi.responses import StreamingResponse
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, Request, Response, Query, UploadFile, File, Header
+from fastapi.responses import StreamingResponse, Response as FastResponse
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel, Field, EmailStr
+
+from storage import init_storage, put_object, get_object, APP_NAME
 
 # --- Setup ---------------------------------------------------------------
 MONGO_URL = os.environ["MONGO_URL"]
@@ -159,6 +161,8 @@ class InvoiceIn(BaseModel):
     gst_percent: float = 0
     lines: List[InvoiceLine]
     notes: Optional[str] = ""
+    attachment_path: Optional[str] = ""
+    attachment_name: Optional[str] = ""
 
 
 class MovementIn(BaseModel):
@@ -629,6 +633,7 @@ DEFAULT_CATEGORIES = ["Cement", "Steel / Rebar", "Bricks & Blocks", "Sand", "Agg
 
 @app.on_event("startup")
 async def startup():
+    init_storage()
     await db.users.create_index("email", unique=True)
     await db.items.create_index("name")
     await db.sites.create_index("name")
@@ -675,6 +680,63 @@ async def shutdown():
 @api.get("/")
 async def root():
     return {"service": "BuildTrack", "status": "ok"}
+
+
+# --- File upload / serve --------------------------------------------------
+MIME = {
+    "jpg": "image/jpeg", "jpeg": "image/jpeg", "png": "image/png",
+    "webp": "image/webp", "gif": "image/gif", "pdf": "application/pdf",
+}
+
+
+@api.post("/upload")
+async def upload_file(file: UploadFile = File(...), user: dict = Depends(get_current_user)):
+    ext = (file.filename or "bin").rsplit(".", 1)[-1].lower()
+    if ext not in MIME:
+        raise HTTPException(400, f"Unsupported file type .{ext}")
+    data = await file.read()
+    if len(data) > 8 * 1024 * 1024:
+        raise HTTPException(400, "File too large (8MB max)")
+    path = f"{APP_NAME}/uploads/{user['id']}/{new_id()}.{ext}"
+    try:
+        result = put_object(path, data, MIME[ext])
+    except Exception as e:
+        logger.exception("Upload failed: %s", e)
+        raise HTTPException(500, "Upload failed - object storage unavailable")
+    await db.files.insert_one({
+        "id": new_id(),
+        "storage_path": result["path"],
+        "original_filename": file.filename,
+        "content_type": MIME[ext],
+        "size": result.get("size", len(data)),
+        "uploaded_by": user["id"],
+        "is_deleted": False,
+        "created_at": now_iso(),
+    })
+    return {"path": result["path"], "name": file.filename}
+
+
+@api.get("/files/{path:path}")
+async def serve_file(path: str, request: Request, auth: Optional[str] = Query(None)):
+    token = request.cookies.get("access_token")
+    if not token:
+        h = request.headers.get("Authorization", "")
+        if h.startswith("Bearer "):
+            token = h[7:]
+    if not token and auth:
+        token = auth
+    if not token:
+        raise HTTPException(401, "Not authenticated")
+    try:
+        jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALG])
+    except jwt.InvalidTokenError:
+        raise HTTPException(401, "Invalid token")
+    rec = await db.files.find_one({"storage_path": path, "is_deleted": False})
+    if not rec:
+        raise HTTPException(404, "File not found")
+    data, ct = get_object(path)
+    return FastResponse(content=data, media_type=rec.get("content_type", ct))
+
 
 
 app.include_router(api)

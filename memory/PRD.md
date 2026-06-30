@@ -20,12 +20,14 @@ Build an app for a construction company providing: inward/outward entry for diff
 - JWT auth (login / register / me / logout); admin seeded from `.env`
 - Sites, Items, Suppliers, Categories CRUD with custom-category creation on the fly
 - Purchase Invoice with multi-line entry; auto-creates inward movements
+- **Invoice attachment (image / PDF) upload to Emergent Object Storage**, viewable inline from invoice list (paperclip icon)
 - Inward / Outward / Consumption movement entries with per-site scoping
 - Live Stock Register: inward − outward − consumption = on hand; status OK / LOW / OUT / HIGH (manual + auto-calc thresholds)
 - Dashboard: purchase value, consumption value, stock value, 30-day trend chart, per-site bar chart, low/high stock lists
 - CSV export for stock, invoices, and each movement type
 - Sidebar with site selector; admin can also create users with site assignment
 - Default categories seeded (Cement, Steel/Rebar, Bricks, Sand, Aggregate, Tools, Electrical, Plumbing, Paint, Hardware)
+- **Mobile-friendly responsive layout**: hamburger drawer, bottom-nav with 5 most-used actions (Home / Bills / In / Use / Stock), card lists on mobile for invoices, stock and movements, 44px tap targets, `capture="environment"` so phone camera opens directly
 
 ## Test Credentials
 See `/app/memory/test_credentials.md` — default admin `admin@buildtrack.com / admin123`.

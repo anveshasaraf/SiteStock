@@ -67,20 +67,20 @@ export default function Movements({ mode }) {
   const meta = META[mode];
 
   return (
-    <div className="px-8 py-8 space-y-6">
-      <header className="flex items-end justify-between flex-wrap gap-4">
+    <div className="px-4 sm:px-8 py-6 sm:py-8 space-y-6">
+      <header className="flex items-end justify-between flex-wrap gap-3">
         <div>
           <div className="bt-eyebrow">{meta.eyebrow}</div>
-          <h1 className={`font-display text-4xl font-bold tracking-tight mt-1 ${meta.color}`}>{meta.title}</h1>
+          <h1 className={`font-display text-2xl sm:text-4xl font-bold tracking-tight mt-1 ${meta.color}`}>{meta.title}</h1>
         </div>
-        <div className="flex gap-3">
-          <Button variant="outline" onClick={exportCsv} className="rounded-sm" data-testid={`export-${mode}-button`}>
-            <DownloadSimple size={14} className="mr-2" /> Export CSV
+        <div className="flex gap-2 w-full sm:w-auto">
+          <Button variant="outline" onClick={exportCsv} className="rounded-sm flex-1 sm:flex-none" data-testid={`export-${mode}-button`}>
+            <DownloadSimple size={14} className="mr-2" /> Export
           </Button>
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-              <Button className="rounded-sm bg-blue-600 hover:bg-blue-700" data-testid={`add-${mode}-button`}>
-                <Plus size={14} className="mr-2" /> New {meta.title}
+              <Button className="rounded-sm bg-blue-600 hover:bg-blue-700 flex-1 sm:flex-none h-11 sm:h-10" data-testid={`add-${mode}-button`}>
+                <Plus size={16} className="mr-2" /> New {meta.title}
               </Button>
             </DialogTrigger>
             <DialogContent className="rounded-sm">
@@ -126,7 +126,7 @@ export default function Movements({ mode }) {
         </div>
       </header>
 
-      <div className="bt-card">
+      <div className="bt-card hidden md:block">
         <table className="bt-table w-full">
           <thead>
             <tr>
@@ -156,6 +156,29 @@ export default function Movements({ mode }) {
             {rows.length === 0 && <tr><td colSpan={8} className="text-center text-zinc-500 py-10">No entries yet.</td></tr>}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile cards */}
+      <div className="md:hidden space-y-3">
+        {rows.map((r) => {
+          const site = sites.find((s) => s.id === r.site_id);
+          return (
+            <div key={r.id} className="bt-card p-4" data-testid={`${mode}-card-${r.id}`}>
+              <div className="flex justify-between items-start gap-2">
+                <div className="min-w-0">
+                  <div className="bt-eyebrow">{r.created_at?.slice(0, 10)}</div>
+                  <div className="font-semibold truncate">{r.item_name}</div>
+                  <div className="text-xs text-zinc-500 truncate">{site?.name || "—"}{r.issued_to ? ` · ${r.issued_to}` : ""}</div>
+                </div>
+                <div className="text-right shrink-0">
+                  <div className="bt-num font-bold">{r.quantity}</div>
+                  <div className="text-xs text-zinc-500">₹{inr(r.amount)}</div>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+        {rows.length === 0 && <div className="text-center text-zinc-500 py-10">No entries yet.</div>}
       </div>
     </div>
   );

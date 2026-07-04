@@ -1,6 +1,6 @@
-import React, { useContext, useEffect, useMemo, useState } from "react";
-import { api, API } from "../lib/auth";
-import { SiteContext } from "./Layout";
+import React, { useEffect, useMemo, useState } from "react";
+import { useParams } from "react-router-dom";
+import { api } from "../lib/auth";
 import { Input } from "../components/ui/input";
 import { Button } from "../components/ui/button";
 import {
@@ -11,26 +11,27 @@ import { DownloadSimple } from "@phosphor-icons/react";
 function inr(n) { return new Intl.NumberFormat("en-IN", { maximumFractionDigits: 2 }).format(n || 0); }
 
 export default function Stock() {
-  const { siteId } = useContext(SiteContext);
+  const { siteId } = useParams();
   const [rows, setRows] = useState([]);
   const [q, setQ] = useState("");
   const [status, setStatus] = useState("ALL");
 
   useEffect(() => {
-    const params = siteId ? { params: { site_id: siteId } } : {};
-    api.get("/stock", params).then((r) => setRows(r.data)).catch(() => {});
-  }, [siteId]);
+    if (!siteId) return;
+    const params = {};
+    if (status !== "ALL") params.status = status;
+    if (q) params.q = q;
+    api.get(`/p/${siteId}/stock`, { params }).then((r) => setRows(r.data)).catch(() => {});
+  }, [siteId, status, q]);
 
   const filtered = useMemo(() => rows.filter((r) =>
-    (status === "ALL" || r.status === status) &&
-    [r.item_name, r.category, r.site_name].join(" ").toLowerCase().includes(q.toLowerCase())
-  ), [rows, q, status]);
+    [r.item_name, r.category].join(" ").toLowerCase().includes(q.toLowerCase())
+  ), [rows, q]);
 
   const exportCsv = async () => {
-    const path = `/export/stock${siteId ? `?site_id=${siteId}` : ""}`;
     try {
       const mod = await import("../lib/auth");
-      await mod.downloadFile(path, "stock_register.csv");
+      await mod.downloadFile(`/p/${siteId}/export/stock`, "stock_register.csv");
     } catch (e) { /* eslint-disable-next-line no-alert */ alert(e.message || "Download failed"); }
   };
 

@@ -1,0 +1,28 @@
+{
+  "short_name": "BuildTrack",
+  "name": "BuildTrack — Construction Inventory",
+  "description": "Track materials, deliveries and stock across your construction sites.",
+  "start_url": "/projects",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#ffffff",
+  "theme_color": "#18181b",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["business", "productivity"],
+  "lang": "en-IN",
+  "dir": "ltr"
+}

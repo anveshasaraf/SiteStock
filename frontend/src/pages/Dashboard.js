@@ -1,6 +1,6 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 import { api } from "../lib/auth";
-import { SiteContext } from "./Layout";
 import { Package, ArrowDown, ArrowUp, Fire, Warning, TrendUp, Buildings } from "@phosphor-icons/react";
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid,
@@ -24,12 +24,12 @@ function inr(n) {
 }
 
 export default function Dashboard() {
-  const { siteId } = useContext(SiteContext);
+  const { siteId } = useParams();
   const [data, setData] = useState(null);
 
   useEffect(() => {
-    const params = siteId ? { params: { site_id: siteId } } : {};
-    api.get("/dashboard", params).then((r) => setData(r.data)).catch(() => {});
+    if (!siteId) return;
+    api.get(`/p/${siteId}/dashboard`).then((r) => setData(r.data)).catch(() => {});
   }, [siteId]);
 
   if (!data) return <div className="p-10 text-zinc-500">Loading dashboard…</div>;
@@ -136,7 +136,7 @@ function AlertList({ title, rows, variant, testid }) {
             {rows.map((r, i) => (
               <tr key={i}>
                 <td className="font-medium">{r.item_name}</td>
-                <td className="text-zinc-500">{r.site_name}</td>
+                <td className="text-zinc-500">{r.category}</td>
                 <td className="text-right bt-num">{r.stock} {r.unit}</td>
                 <td className="text-right bt-num text-zinc-500">
                   {variant === "low" ? (r.min_stock || r.auto_min_stock) : r.max_stock}

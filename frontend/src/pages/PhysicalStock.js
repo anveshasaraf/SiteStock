@@ -1,6 +1,6 @@
-import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useParams } from "react-router-dom";
 import { api, formatErr, API } from "../lib/auth";
-import { SiteContext } from "./Layout";
 import { Input } from "../components/ui/input";
 import { Button } from "../components/ui/button";
 import {
@@ -12,7 +12,7 @@ import { toast } from "sonner";
 function fmt(n) { return new Intl.NumberFormat("en-IN", { maximumFractionDigits: 3 }).format(n || 0); }
 
 export default function PhysicalStock() {
-  const { siteId, sites } = useContext(SiteContext);
+  const { siteId } = useParams();
   const [stock, setStock] = useState([]);
   const [history, setHistory] = useState([]);
   const [counts, setCounts] = useState({});  // key -> string
@@ -25,8 +25,11 @@ export default function PhysicalStock() {
   const fileRefs = useRef({});
 
   const load = async () => {
-    const p = siteId ? { params: { site_id: siteId } } : {};
-    const [s, h] = await Promise.all([api.get("/stock", p), api.get("/physical-stock", p)]);
+    if (!siteId) return;
+    const [s, h] = await Promise.all([
+      api.get(`/p/${siteId}/stock`),
+      api.get(`/p/${siteId}/physical-stock`),
+    ]);
     setStock(s.data); setHistory(h.data);
   };
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [siteId]);
@@ -62,10 +65,10 @@ export default function PhysicalStock() {
     setSaving(true);
     try {
       for (const [key, val] of entries) {
-        const [site_id, item_id] = key.split("|");
+        const [, item_id] = key.split("|");
         const photo = photos[key];
-        await api.post("/physical-stock", {
-          item_id, site_id, counted_qty: parseFloat(val), adjust, notes: "",
+        await api.post(`/p/${siteId}/physical-stock`, {
+          item_id, counted_qty: parseFloat(val), adjust, notes: "",
           photo_path: photo?.path || "", photo_name: photo?.name || "",
         });
       }
@@ -75,15 +78,13 @@ export default function PhysicalStock() {
     finally { setSaving(false); }
   };
 
-  const openPreview = async (path) => {
+  const openPreview = async (storagePath) => {
     try {
-      const t = localStorage.getItem("bt_token");
-      const r = await fetch(`${API}/files/${path}`, { headers: { Authorization: `Bearer ${t}` } });
-      const blob = await r.blob();
-      setPreviewBlob(URL.createObjectURL(blob));
+      const { data } = await api.get(`/files/signed`, { params: { path: storagePath } });
+      setPreviewBlob(data.url);
     } catch { toast.error("Could not load photo"); }
   };
-  const closePreview = () => { if (previewBlob) URL.revokeObjectURL(previewBlob); setPreviewBlob(null); };
+  const closePreview = () => { setPreviewBlob(null); };
 
   return (
     <div className="px-4 sm:px-8 py-6 sm:py-8 space-y-6">
@@ -181,35 +182,31 @@ export default function PhysicalStock() {
         </div>
         <div className="bt-card overflow-x-auto">
           <table className="bt-table w-full min-w-[800px]">
-            <thead><tr><th>Date</th><th>Item</th><th>Site</th><th className="text-right">System</th><th className="text-right">Counted</th><th className="text-right">Variance</th><th>By</th><th>Photo</th><th>Adjusted</th></tr></thead>
+            <thead><tr><th>Date</th><th>Item</th><th className="text-right">System</th><th className="text-right">Counted</th><th className="text-right">Variance</th><th>By</th><th>Photo</th><th>Adjusted</th></tr></thead>
             <tbody>
-              {history.map((h) => {
-                const site = sites.find((s) => s.id === h.site_id);
-                return (
-                  <tr key={h.id} data-testid={`audit-row-${h.id}`}>
-                    <td className="text-xs text-zinc-500">{h.created_at?.slice(0, 16).replace("T", " ")}</td>
-                    <td className="font-medium">{h.item_name}</td>
-                    <td className="text-zinc-500">{site?.name || "—"}</td>
-                    <td className="text-right bt-num">{fmt(h.system_qty)}</td>
-                    <td className="text-right bt-num">{fmt(h.counted_qty)}</td>
-                    <td className="text-right bt-num">
-                      {h.variance === 0 ? <span className="text-zinc-500">0</span> :
-                       h.variance > 0 ? <span className="text-emerald-700">+{fmt(h.variance)}</span> :
-                       <span className="text-red-700">{fmt(h.variance)}</span>}
-                    </td>
-                    <td className="text-zinc-500">{h.counted_by_name}</td>
-                    <td>
-                      {h.photo_path ? (
-                        <button onClick={() => openPreview(h.photo_path)} className="text-blue-600 inline-flex items-center gap-1" data-testid={`audit-photo-${h.id}`}>
-                          <ImgIcon size={14} /> View
-                        </button>
-                      ) : <span className="text-zinc-300">—</span>}
-                    </td>
-                    <td>{h.adjusted ? <span className="bt-badge bt-status-high"><ArrowsClockwise size={12} className="mr-1" /> Yes</span> : <span className="text-zinc-400">—</span>}</td>
-                  </tr>
-                );
-              })}
-              {history.length === 0 && <tr><td colSpan={9} className="text-center text-zinc-500 py-10">No audits yet.</td></tr>}
+              {history.map((h) => (
+                <tr key={h.id} data-testid={`audit-row-${h.id}`}>
+                  <td className="text-xs text-zinc-500">{h.created_at?.slice(0, 16).replace("T", " ")}</td>
+                  <td className="font-medium">{h.item_name}</td>
+                  <td className="text-right bt-num">{fmt(h.system_qty)}</td>
+                  <td className="text-right bt-num">{fmt(h.counted_qty)}</td>
+                  <td className="text-right bt-num">
+                    {h.variance === 0 ? <span className="text-zinc-500">0</span> :
+                     h.variance > 0 ? <span className="text-emerald-700">+{fmt(h.variance)}</span> :
+                     <span className="text-red-700">{fmt(h.variance)}</span>}
+                  </td>
+                  <td className="text-zinc-500">{h.counted_by_name || "—"}</td>
+                  <td>
+                    {h.photo_path ? (
+                      <button onClick={() => openPreview(h.photo_path)} className="text-blue-600 inline-flex items-center gap-1" data-testid={`audit-photo-${h.id}`}>
+                        <ImgIcon size={14} /> View
+                      </button>
+                    ) : <span className="text-zinc-300">—</span>}
+                  </td>
+                  <td>{h.adjusted ? <span className="bt-badge bt-status-high"><ArrowsClockwise size={12} className="mr-1" /> Yes</span> : <span className="text-zinc-400">—</span>}</td>
+                </tr>
+              ))}
+              {history.length === 0 && <tr><td colSpan={8} className="text-center text-zinc-500 py-10">No audits yet.</td></tr>}
             </tbody>
           </table>
         </div>

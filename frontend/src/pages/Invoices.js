@@ -1,6 +1,6 @@
-import React, { useContext, useEffect, useRef, useState } from "react";
-import { api, formatErr, API } from "../lib/auth";
-import { SiteContext } from "./Layout";
+import React, { useEffect, useRef, useState } from "react";
+import { useParams } from "react-router-dom";
+import { api, formatErr } from "../lib/auth";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
@@ -12,7 +12,6 @@ import {
 } from "../components/ui/dialog";
 import { Plus, Trash, DownloadSimple, Paperclip, Image as ImgIcon } from "@phosphor-icons/react";
 import { toast } from "sonner";
-import { useAuth } from "../lib/auth";
 
 function today() { return new Date().toISOString().slice(0, 10); }
 function inr(n) { return new Intl.NumberFormat("en-IN", { maximumFractionDigits: 2 }).format(n || 0); }
@@ -20,8 +19,7 @@ function inr(n) { return new Intl.NumberFormat("en-IN", { maximumFractionDigits:
 const emptyLine = { item_id: "", item_name: "", unit: "", quantity: 1, rate: 0, amount: 0 };
 
 export default function Invoices() {
-  const { user } = useAuth();
-  const { sites, siteId } = useContext(SiteContext);
+  const { siteId } = useParams();
   const [invoices, setInvoices] = useState([]);
   const [items, setItems] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
@@ -33,15 +31,14 @@ export default function Invoices() {
 
   const [inv, setInv] = useState({
     invoice_number: "", supplier_id: "", supplier_name: "",
-    site_id: user?.role !== "admin" ? user?.site_id : (siteId || ""),
     invoice_date: today(), gst_percent: 18, lines: [{ ...emptyLine }], notes: "",
     attachment_path: "", attachment_name: "",
   });
 
   const load = async () => {
-    const params = siteId ? { params: { site_id: siteId } } : {};
+    if (!siteId) return;
     const [a, b, c] = await Promise.all([
-      api.get("/invoices", params), api.get("/items"), api.get("/suppliers"),
+      api.get(`/p/${siteId}/invoices`), api.get("/items"), api.get("/suppliers"),
     ]);
     setInvoices(a.data); setItems(b.data); setSuppliers(c.data);
   };
@@ -83,12 +80,12 @@ export default function Invoices() {
   const total = +(subtotal + gst).toFixed(2);
 
   const save = async () => {
-    if (!inv.invoice_number || !inv.supplier_id || !inv.site_id || inv.lines.length === 0)
-      return toast.error("Fill invoice no., supplier, site and at least one line");
+    if (!inv.invoice_number || !inv.supplier_id || inv.lines.length === 0)
+      return toast.error("Fill invoice no., supplier and at least one line");
     if (inv.lines.some((l) => !l.item_id || l.quantity <= 0))
       return toast.error("Each line needs an item and quantity > 0");
     try {
-      await api.post("/invoices", inv);
+      await api.post(`/p/${siteId}/invoices`, inv);
       toast.success("Invoice saved & stock updated");
       setOpen(false);
       setInv((s) => ({ ...s, invoice_number: "", lines: [{ ...emptyLine }], notes: "", attachment_path: "", attachment_name: "" }));
@@ -98,12 +95,11 @@ export default function Invoices() {
 
   const del = async (id) => {
     if (!window.confirm("Delete invoice & its inward movements?")) return;
-    await api.delete(`/invoices/${id}`); load();
+    await api.delete(`/p/${siteId}/invoices/${id}`); load();
   };
 
   const exportCsv = async () => {
-    const path = `/export/invoices${siteId ? `?site_id=${siteId}` : ""}`;
-    try { await (await import("../lib/auth")).downloadFile(path, "invoices.csv"); }
+    try { await (await import("../lib/auth")).downloadFile(`/p/${siteId}/export/invoices.xlsx`, "invoices.xlsx"); }
     catch (e) { toast.error(e.message || "Download failed"); }
   };
 
@@ -112,19 +108,14 @@ export default function Invoices() {
     setInv({ ...inv, supplier_id: id, supplier_name: s?.name || "" });
   };
 
-  const openPreview = async (path) => {
-    setPreviewPath(path);
+  const openPreview = async (storagePath) => {
+    setPreviewPath(storagePath);
     try {
-      const t = localStorage.getItem("bt_token");
-      const r = await fetch(`${API}/files/${path}`, { headers: { Authorization: `Bearer ${t}` } });
-      const blob = await r.blob();
-      setPreviewBlob(URL.createObjectURL(blob));
+      const { data } = await api.get("/files/signed", { params: { path: storagePath } });
+      setPreviewBlob(data.url);
     } catch { toast.error("Could not load attachment"); }
   };
-  const closePreview = () => {
-    if (previewBlob) URL.revokeObjectURL(previewBlob);
-    setPreviewPath(null); setPreviewBlob(null);
-  };
+  const closePreview = () => { setPreviewPath(null); setPreviewBlob(null); };
 
   return (
     <div className="px-4 sm:px-8 py-6 sm:py-8 space-y-6">
@@ -156,17 +147,6 @@ export default function Invoices() {
                     <SelectContent>
                       {suppliers.map((s) => (
                         <SelectItem key={s.id} value={s.id} data-testid={`invoice-supplier-option-${s.id}`}>{s.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>Site</Label>
-                  <Select value={inv.site_id} onValueChange={(v) => setInv({ ...inv, site_id: v })} disabled={user?.role !== "admin"}>
-                    <SelectTrigger data-testid="invoice-site-select"><SelectValue placeholder="Select site" /></SelectTrigger>
-                    <SelectContent>
-                      {sites.map((s) => (
-                        <SelectItem key={s.id} value={s.id} data-testid={`invoice-site-option-${s.id}`}>{s.name}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>

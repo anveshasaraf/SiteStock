@@ -32,7 +32,7 @@ export default function PhysicalStock() {
     ]);
     setStock(s.data); setHistory(h.data);
   };
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [siteId]);
+  useEffect(() => { load(); }, [siteId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const rows = useMemo(() =>
     stock.filter((r) => [r.item_name, r.site_name, r.category].join(" ").toLowerCase().includes(q.toLowerCase())),

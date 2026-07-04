@@ -28,7 +28,7 @@ export default function ProjectSelect() {
     if (sites.length === 1 && !user?.is_super_admin) {
       navigate(`/p/${sites[0].id}`, { replace: true });
     }
-  }, [sites, user, navigate]);
+  }, [sites.length, user?.is_super_admin, navigate]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleLogout = async () => { await logout(); navigate("/login"); };
 

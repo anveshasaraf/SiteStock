@@ -42,7 +42,7 @@ export default function Invoices() {
     ]);
     setInvoices(a.data); setItems(b.data); setSuppliers(c.data);
   };
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [siteId]);
+  useEffect(() => { load(); }, [siteId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const updateLine = (i, patch) => {
     setInv((s) => {

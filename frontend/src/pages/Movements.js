@@ -40,7 +40,7 @@ export default function Movements({ mode }) {
     ]).then(([a, b]) => { setRows(a.data); setItems(b.data); }).catch(() => {});
   };
 
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [mode, siteId]);
+  useEffect(() => { load(); }, [mode, siteId]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { setForm(BLANK(mode)); }, [mode]);
 
   const save = async () => {

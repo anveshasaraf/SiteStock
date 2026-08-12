@@ -1,6 +1,6 @@
 /**
- * Org Admin — super-admin area.
- * Manages sites, users, memberships, and the aggregate rollup dashboard.
+ * Org Admin - super-admin area.
+ * Manages sites, users, and memberships (grant/revoke site access).
  */
 import React, { useEffect, useState } from "react";
 import { Routes, Route, NavLink, useNavigate } from "react-router-dom";
@@ -15,9 +15,23 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter,
 } from "../components/ui/dialog";
 import {
-  HardHat, Buildings, Users, ArrowLeft, Plus, Trash, ArrowRight,
+  HardHat, Buildings, Users, ArrowLeft, Plus, Trash, ArrowRight, UserPlus,
 } from "@phosphor-icons/react";
 import { toast } from "sonner";
+
+const ROLES = [
+  { value: "viewer",     label: "Viewer - read-only" },
+  { value: "logger",     label: "Logger - log entries (field worker)" },
+  { value: "manager",    label: "Manager - full CRUD" },
+  { value: "site_admin", label: "Site Admin - manage members" },
+];
+
+const ROLE_BADGE = {
+  site_admin: "bg-blue-100 text-blue-700",
+  manager:    "bg-emerald-100 text-emerald-700",
+  logger:     "bg-amber-100 text-amber-700",
+  viewer:     "bg-zinc-100 text-zinc-600",
+};
 
 // ── Shell ────────────────────────────────────────────────────────────────────
 
@@ -25,7 +39,6 @@ export default function OrgAdmin() {
   const navigate = useNavigate();
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-white">
-      {/* Sidebar */}
       <aside className="md:w-56 shrink-0 border-r border-zinc-200 bg-zinc-50 flex flex-col">
         <div className="px-5 py-5 border-b border-zinc-200 flex items-center gap-2">
           <div className="w-8 h-8 bg-zinc-900 text-white grid place-items-center rounded-sm">
@@ -42,8 +55,7 @@ export default function OrgAdmin() {
             { to: "/org/users", label: "Users",   Icon: Users },
           ].map(({ to, label, Icon }) => (
             <NavLink key={to} to={to}
-              className={({ isActive }) =>
-                `bt-link-row ${isActive ? "active" : ""}`}>
+              className={({ isActive }) => `bt-link-row ${isActive ? "active" : ""}`}>
               <Icon size={16} />{label}
             </NavLink>
           ))}
@@ -58,7 +70,6 @@ export default function OrgAdmin() {
         </div>
       </aside>
 
-      {/* Content */}
       <main className="flex-1 min-w-0">
         <Routes>
           <Route index element={<Navigate to="sites" />} />
@@ -70,7 +81,6 @@ export default function OrgAdmin() {
   );
 }
 
-// ── Redirect helper ──────────────────────────────────────────────────────────
 function Navigate({ to }) {
   const navigate = useNavigate();
   useEffect(() => { navigate(to, { replace: true }); }, [navigate, to]);
@@ -81,18 +91,35 @@ function Navigate({ to }) {
 
 function SitesPage() {
   const navigate = useNavigate();
-  const [sites,  setSites]  = useState([]);
-  const [open,   setOpen]   = useState(false);
-  const [form,   setForm]   = useState({ name: "", code: "", location: "" });
+  const [sites,       setSites]       = useState([]);
+  const [allUsers,    setAllUsers]    = useState([]);
+  const [newSiteOpen, setNewSiteOpen] = useState(false);
+  const [membersOpen, setMembersOpen] = useState(false);
+  const [activeSite,  setActiveSite]  = useState(null);
+  const [members,     setMembers]     = useState([]);
+  const [grantForm,   setGrantForm]   = useState({ user_id: "", role: "logger" });
+  const [form,        setForm]        = useState({ name: "", code: "", location: "" });
 
-  const load = () => api.get("/org/sites").then((r) => setSites(r.data)).catch(() => {});
+  const load = () => Promise.all([
+    api.get("/org/sites"),
+    api.get("/org/users"),
+  ]).then(([s, u]) => { setSites(s.data); setAllUsers(u.data); }).catch(() => {});
+
   useEffect(() => { load(); }, []);
+
+  const loadMembers = (site) => {
+    setActiveSite(site);
+    setMembersOpen(true);
+    api.get(`/org/memberships/${site.id}`)
+      .then((r) => setMembers(r.data))
+      .catch(() => toast.error("Failed to load members"));
+  };
 
   const save = async () => {
     if (!form.name) return toast.error("Site name required");
     try {
       await api.post("/org/sites", form);
-      toast.success("Site created"); setOpen(false); setForm({ name: "", code: "", location: "" }); load();
+      toast.success("Site created"); setNewSiteOpen(false); setForm({ name: "", code: "", location: "" }); load();
     } catch (e) { toast.error(formatErr(e.response?.data?.detail)); }
   };
 
@@ -101,6 +128,48 @@ function SitesPage() {
     await api.delete(`/org/sites/${id}`); load();
   };
 
+  const grantAccess = async () => {
+    if (!grantForm.user_id) return toast.error("Select a user");
+    try {
+      await api.post("/org/memberships", {
+        user_id: grantForm.user_id,
+        site_id: activeSite.id,
+        role: grantForm.role,
+      });
+      toast.success("Access granted");
+      setGrantForm({ user_id: "", role: "logger" });
+      const r = await api.get(`/org/memberships/${activeSite.id}`);
+      setMembers(r.data);
+    } catch (e) { toast.error(formatErr(e.response?.data?.detail) || "Failed"); }
+  };
+
+  const revoke = async (membershipId) => {
+    if (!window.confirm("Remove this user's access?")) return;
+    try {
+      await api.delete(`/org/memberships/${membershipId}`);
+      toast.success("Access removed");
+      const r = await api.get(`/org/memberships/${activeSite.id}`);
+      setMembers(r.data);
+    } catch (e) { toast.error(formatErr(e.response?.data?.detail) || "Failed"); }
+  };
+
+  const changeRole = async (membershipId, newRole) => {
+    const member = members.find((m) => m.id === membershipId);
+    if (!member) return;
+    try {
+      await api.post("/org/memberships", {
+        user_id: member.user_id,
+        site_id: activeSite.id,
+        role: newRole,
+      });
+      toast.success("Role updated");
+      const r = await api.get(`/org/memberships/${activeSite.id}`);
+      setMembers(r.data);
+    } catch (e) { toast.error(formatErr(e.response?.data?.detail) || "Failed"); }
+  };
+
+  const nonMembers = allUsers.filter((u) => !members.some((m) => m.user_id === u.id));
+
   return (
     <div className="px-6 py-8 space-y-6">
       <header className="flex items-end justify-between">
@@ -108,7 +177,7 @@ function SitesPage() {
           <div className="bt-eyebrow">Organization</div>
           <h1 className="font-display text-3xl font-bold tracking-tight mt-0.5">Sites</h1>
         </div>
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog open={newSiteOpen} onOpenChange={setNewSiteOpen}>
           <DialogTrigger asChild>
             <Button className="bg-blue-600 hover:bg-blue-700 rounded-sm">
               <Plus size={16} className="mr-2" /> New Site
@@ -141,18 +210,86 @@ function SitesPage() {
                 <Trash size={16} />
               </button>
             </div>
-            <button
-              onClick={() => navigate(`/p/${s.id}`)}
-              className="flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-700 font-semibold"
-            >
-              Open workspace <ArrowRight size={14} />
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => loadMembers(s)}
+                className="flex items-center gap-1.5 text-sm text-zinc-600 hover:text-zinc-900 border border-zinc-200 px-3 py-1.5 rounded-sm flex-1 justify-center transition-colors"
+              >
+                <UserPlus size={14} /> Manage Access
+              </button>
+              <button
+                onClick={() => navigate(`/p/${s.id}`)}
+                className="flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-700 font-semibold"
+              >
+                Open <ArrowRight size={14} />
+              </button>
+            </div>
           </div>
         ))}
         {sites.length === 0 && (
           <div className="col-span-full text-center text-zinc-400 py-16">No sites yet.</div>
         )}
       </div>
+
+      {/* Members dialog */}
+      <Dialog open={membersOpen} onOpenChange={setMembersOpen}>
+        <DialogContent className="rounded-sm max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Site Access - {activeSite?.name}</DialogTitle>
+          </DialogHeader>
+
+          {/* Current members */}
+          <div className="space-y-2 max-h-56 overflow-y-auto">
+            {members.length === 0 && <p className="text-sm text-zinc-400 py-2">No members yet.</p>}
+            {members.map((m) => (
+              <div key={m.id} className="flex items-center justify-between gap-2 py-1.5 border-b border-zinc-100 last:border-0">
+                <div className="min-w-0">
+                  <div className="font-medium text-sm">{m.name}</div>
+                  <div className="text-xs text-zinc-500">{m.email || m.phone}</div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <select
+                    value={m.role}
+                    onChange={(e) => changeRole(m.id, e.target.value)}
+                    className={`text-xs font-semibold px-2 py-1 rounded-sm border-0 cursor-pointer ${ROLE_BADGE[m.role] || "bg-zinc-100"}`}
+                  >
+                    {ROLES.map((r) => <option key={r.value} value={r.value}>{r.value}</option>)}
+                  </select>
+                  <button onClick={() => revoke(m.id)} className="text-zinc-300 hover:text-red-500 transition-colors">
+                    <Trash size={14} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Grant access to existing user */}
+          {nonMembers.length > 0 && (
+            <div className="pt-4 border-t border-zinc-200 space-y-3">
+              <div className="text-sm font-semibold text-zinc-700">Grant access to existing user</div>
+              <div className="flex gap-2">
+                <Select value={grantForm.user_id} onValueChange={(v) => setGrantForm({ ...grantForm, user_id: v })}>
+                  <SelectTrigger className="flex-1"><SelectValue placeholder="Select user…" /></SelectTrigger>
+                  <SelectContent>
+                    {nonMembers.map((u) => (
+                      <SelectItem key={u.id} value={u.id}>{u.name} ({u.email || u.phone})</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={grantForm.role} onValueChange={(v) => setGrantForm({ ...grantForm, role: v })}>
+                  <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {ROLES.map((r) => <SelectItem key={r.value} value={r.value}>{r.value}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button onClick={grantAccess} className="w-full bg-blue-600 hover:bg-blue-700 rounded-sm">
+                <UserPlus size={14} className="mr-2" /> Grant Access
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -196,6 +333,9 @@ function UsersPage() {
         <div>
           <div className="bt-eyebrow">Organization</div>
           <h1 className="font-display text-3xl font-bold tracking-tight mt-0.5">Users</h1>
+          <p className="text-sm text-zinc-500 mt-1">
+            Create users here, then grant them site access from the <strong>Sites</strong> page.
+          </p>
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
@@ -208,15 +348,7 @@ function UsersPage() {
             <div className="space-y-3">
               <div><Label>Full Name</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
               <div>
-                <Label>Phone (for OTP login)</Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-sm font-mono">+91</span>
-                  <Input className="pl-10" value={form.phone} placeholder="9876543210"
-                    onChange={(e) => setForm({ ...form, phone: e.target.value.replace(/\D/g, "").slice(0, 10) })} />
-                </div>
-              </div>
-              <div>
-                <Label>Email (for password login — managers/admins)</Label>
+                <Label>Email (for password login)</Label>
                 <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
               </div>
               <div>
@@ -233,10 +365,7 @@ function UsersPage() {
                 <Select value={form.role} onValueChange={(v) => setForm({ ...form, role: v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="viewer">Viewer — read-only</SelectItem>
-                    <SelectItem value="logger">Logger — log entries (field worker)</SelectItem>
-                    <SelectItem value="manager">Manager — full CRUD</SelectItem>
-                    <SelectItem value="site_admin">Site Admin — manage members</SelectItem>
+                    {ROLES.map((r) => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>

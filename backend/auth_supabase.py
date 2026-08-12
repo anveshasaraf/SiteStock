@@ -44,11 +44,11 @@ async def _decode_token(token: str) -> dict:
         return jwt.decode(
             token,
             signing_key.key,
-            algorithms=["RS256"],
+            algorithms=["RS256", "ES256"],
             audience="authenticated",
         )
     except jwt.ExpiredSignatureError:
-        raise HTTPException(401, "Token expired — please sign in again")
+        raise HTTPException(401, "Token expired - please sign in again")
     except jwt.InvalidTokenError as e:
         raise HTTPException(401, f"Invalid token: {e}")
     except Exception as e:
@@ -93,7 +93,7 @@ async def get_current_user(request: Request) -> dict:
         )
         if not profile:
             raise HTTPException(
-                401, "User profile not found — account may not be set up yet"
+                401, "User profile not found - account may not be set up yet"
             )
 
         rows = await conn.fetch(

@@ -1,4 +1,4 @@
-"""BuildTrack API — re-platformed on Supabase Postgres + Auth."""
+"""BuildTrack API - re-platformed on Supabase Postgres + Auth."""
 from dotenv import load_dotenv
 from pathlib import Path
 load_dotenv(Path(__file__).parent / ".env")
@@ -720,34 +720,27 @@ async def list_movements(
     site_id: str,
     user: dict = Depends(require_site_role("viewer")),
     mtype: Optional[str] = Query(None, alias="type"),
+    days: Optional[int] = Query(None, ge=1, le=3650),
     page: int = Query(1, ge=1),
-    page_size: int = Query(100, ge=1, le=500),
+    page_size: int = Query(200, ge=1, le=500),
 ):
     offset = (page - 1) * page_size
     pool = await get_pool()
     async with pool.acquire() as conn:
+        sql = """
+            SELECT id, item_id, item_name, quantity, rate, amount, type,
+                   reference, notes, issued_to, created_at
+            FROM movements WHERE site_id=$1 AND deleted_at IS NULL
+        """
+        params: list = [uuid.UUID(site_id)]
+        idx = 2
         if mtype:
-            rows = await conn.fetch(
-                """
-                SELECT id, item_id, item_name, quantity, rate, amount, type,
-                       reference, notes, issued_to, created_at
-                FROM movements
-                WHERE site_id=$1 AND type=$2::movement_type AND deleted_at IS NULL
-                ORDER BY created_at DESC LIMIT $3 OFFSET $4
-                """,
-                uuid.UUID(site_id), mtype, page_size, offset,
-            )
-        else:
-            rows = await conn.fetch(
-                """
-                SELECT id, item_id, item_name, quantity, rate, amount, type,
-                       reference, notes, issued_to, created_at
-                FROM movements
-                WHERE site_id=$1 AND deleted_at IS NULL
-                ORDER BY created_at DESC LIMIT $2 OFFSET $3
-                """,
-                uuid.UUID(site_id), page_size, offset,
-            )
+            sql += f" AND type=${idx}::movement_type"; params.append(mtype); idx += 1
+        if days:
+            sql += f" AND created_at >= NOW() - INTERVAL '1 day' * ${idx}"; params.append(days); idx += 1
+        sql += f" ORDER BY created_at DESC LIMIT ${idx} OFFSET ${idx+1}"
+        params.extend([page_size, offset])
+        rows = await conn.fetch(sql, *params)
     return _rows(rows)
 
 
@@ -796,6 +789,64 @@ async def delete_movement(
     if res == "UPDATE 0":
         raise HTTPException(404, "Movement not found")
     return {"ok": True}
+
+
+# ── Stock Summary (period-filtered inward/outward/consumed + closing balance) ─
+
+@api.get("/p/{site_id}/stock-summary")
+async def stock_summary(
+    site_id: str,
+    user: dict = Depends(require_site_role("viewer")),
+    days: int = Query(30, ge=1, le=3650),
+):
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        rows = await conn.fetch(
+            """
+            SELECT
+                i.id AS item_id,
+                i.name AS item_name,
+                i.unit,
+                COALESCE(SUM(m.quantity) FILTER (WHERE m.type='inward'),      0) AS inward_qty,
+                COALESCE(SUM(m.amount)   FILTER (WHERE m.type='inward'),      0) AS inward_value,
+                COALESCE(SUM(m.quantity) FILTER (WHERE m.type='outward'),     0) AS outward_qty,
+                COALESCE(SUM(m.amount)   FILTER (WHERE m.type='outward'),     0) AS outward_value,
+                COALESCE(SUM(m.quantity) FILTER (WHERE m.type='consumption'), 0) AS consumed_qty,
+                COALESCE(SUM(m.amount)   FILTER (WHERE m.type='consumption'), 0) AS consumed_value,
+                COALESCE(sr.stock, 0)  AS closing_qty,
+                COALESCE(sr.value, 0)  AS closing_value,
+                COALESCE(sr.status, 'OK') AS status
+            FROM items i
+            LEFT JOIN movements m
+                ON m.item_id = i.id
+               AND m.site_id = $1
+               AND m.deleted_at IS NULL
+               AND m.created_at >= NOW() - (INTERVAL '1 day' * $2)
+            LEFT JOIN stock_register sr ON sr.item_id = i.id AND sr.site_id = $1
+            WHERE i.deleted_at IS NULL
+              AND (m.id IS NOT NULL OR sr.item_id IS NOT NULL)
+            GROUP BY i.id, i.name, i.unit, sr.stock, sr.value, sr.status
+            ORDER BY i.name
+            """,
+            uuid.UUID(site_id), days,
+        )
+    return [
+        {
+            "item_id":       str(r["item_id"]),
+            "item_name":     r["item_name"],
+            "unit":          r["unit"],
+            "inward_qty":    float(r["inward_qty"]),
+            "inward_value":  float(r["inward_value"]),
+            "outward_qty":   float(r["outward_qty"]),
+            "outward_value": float(r["outward_value"]),
+            "consumed_qty":  float(r["consumed_qty"]),
+            "consumed_value":float(r["consumed_value"]),
+            "closing_qty":   float(r["closing_qty"]),
+            "closing_value": float(r["closing_value"]),
+            "status":        r["status"],
+        }
+        for r in rows
+    ]
 
 
 # ── Stock Register (site-scoped) ─────────────────────────────────────────────
@@ -1220,14 +1271,14 @@ async def upload_file_endpoint(
         raise HTTPException(400, f"Unsupported file type .{ext}. Allowed: {', '.join(ALLOWED_MIME)}")
     data = await file.read()
     if len(data) > MAX_BYTES:
-        raise HTTPException(400, "File too large — 8 MB maximum")
+        raise HTTPException(400, "File too large - 8 MB maximum")
 
     storage_path = make_storage_path(user["id"], ext)
     try:
         result = await upload_file(storage_path, data, ALLOWED_MIME[ext])
     except RuntimeError as e:
         logger.exception("Upload failed: %s", e)
-        raise HTTPException(500, "File upload failed — storage unavailable")
+        raise HTTPException(500, "File upload failed - storage unavailable")
 
     pool = await get_pool()
     async with pool.acquire() as conn:
@@ -1268,7 +1319,7 @@ async def signed_file_url(
 async def startup():
     # Eagerly open the pool so first requests aren't slow
     await get_pool()
-    logger.info("BuildTrack API v2 ready — Supabase Postgres backend")
+    logger.info("BuildTrack API v2 ready - Supabase Postgres backend")
 
 
 @app.on_event("shutdown")

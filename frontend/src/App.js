@@ -16,6 +16,7 @@ import PhysicalStock from "./pages/PhysicalStock";
 import Items        from "./pages/Items";
 import Suppliers    from "./pages/Suppliers";
 import Reports      from "./pages/Reports";
+import StockSummary from "./pages/StockSummary";
 import LoggerHome   from "./pages/LoggerHome";
 
 // ── Auth Guard ───────────────────────────────────────────────────────────────
@@ -43,18 +44,18 @@ export default function App() {
           {/* Public */}
           <Route path="/login" element={<Login />} />
 
-          {/* Project selection — where you land after login */}
+          {/* Project selection - where you land after login */}
           <Route path="/projects" element={<Guard><ProjectSelect /></Guard>} />
 
-          {/* Org admin — super-admin only */}
+          {/* Org admin - super-admin only */}
           <Route path="/org/*" element={<Guard superAdminOnly><OrgAdmin /></Guard>} />
 
-          {/* Per-project workspace — all feature routes live under /p/:siteId */}
+          {/* Per-project workspace - all feature routes live under /p/:siteId */}
           <Route
             path="/p/:siteId"
             element={<Guard><Layout /></Guard>}
           >
-            {/* Logger home is the default — stripped view for site staff */}
+            {/* Logger home is the default - stripped view for site staff */}
             <Route index element={<LoggerHome />} />
             <Route path="dashboard"     element={<Dashboard />} />
             <Route path="stock"         element={<Stock />} />
@@ -65,6 +66,7 @@ export default function App() {
             <Route path="physical-stock" element={<PhysicalStock />} />
             <Route path="items"         element={<Items />} />
             <Route path="suppliers"     element={<Suppliers />} />
+            <Route path="stock-summary"  element={<StockSummary />} />
             <Route path="reports"       element={<Reports />} />
           </Route>
 

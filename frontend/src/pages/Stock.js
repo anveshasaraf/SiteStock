@@ -84,7 +84,7 @@ export default function Stock() {
                 <td className="text-right bt-num">{r.consumption}</td>
                 <td className="text-right bt-num font-semibold">{r.stock}</td>
                 <td className="text-right bt-num text-zinc-500">{r.min_stock || `~${r.auto_min_stock}`}</td>
-                <td className="text-right bt-num text-zinc-500">{r.max_stock || "—"}</td>
+                <td className="text-right bt-num text-zinc-500">{r.max_stock || "-"}</td>
                 <td className="text-right bt-num">₹{inr(r.value)}</td>
                 <td>
                   <span className={`bt-badge ${

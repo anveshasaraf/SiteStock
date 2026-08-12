@@ -1,5 +1,5 @@
 /**
- * Logger Home — the blue-collar entry screen.
+ * Logger Home - the blue-collar entry screen.
  * Shows exactly 3 big action buttons + a recent activity snapshot.
  * Designed for one-hand phone use; all targets ≥ 56px.
  */
@@ -66,7 +66,7 @@ export default function LoggerHome() {
         <h1 className="font-display text-2xl font-bold tracking-tight mt-0.5">What's happening?</h1>
       </div>
 
-      {/* KPI strip — stock health at a glance */}
+      {/* KPI strip - stock health at a glance */}
       {summary && (
         <div className="grid grid-cols-2 gap-3">
           <div className="bt-card p-4">

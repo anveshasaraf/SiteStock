@@ -1,4 +1,4 @@
--- BuildTrack — Initial Schema
+-- BuildTrack - Initial Schema
 -- Run with: supabase db push  OR  supabase migration up
 -- Schema authority: this file. Never edit the DB directly.
 
@@ -39,7 +39,7 @@ CREATE TABLE sites (
     deleted_at  TIMESTAMPTZ                  -- soft-delete
 );
 
--- Granular per-project membership — the heart of the permission model
+-- Granular per-project membership - the heart of the permission model
 CREATE TABLE memberships (
     id          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id     UUID        NOT NULL REFERENCES profiles(id)  ON DELETE CASCADE,
@@ -253,7 +253,7 @@ CREATE TRIGGER on_auth_user_created
 
 -- ── Stock Register View ───────────────────────────────────────────────────────
 -- Replaces the Python compute_stock() load-everything approach.
--- Uses SQL aggregation — O(movements) not O(sites * items).
+-- Uses SQL aggregation - O(movements) not O(sites * items).
 
 CREATE OR REPLACE VIEW stock_register AS
 WITH movement_agg AS (

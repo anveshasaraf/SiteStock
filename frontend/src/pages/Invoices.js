@@ -248,12 +248,12 @@ export default function Invoices() {
                       <button onClick={() => openPreview(iv.attachment_path)} className="text-blue-600" title="View attachment" data-testid={`invoice-view-attachment-${iv.id}`}>
                         <Paperclip size={16} />
                       </button>
-                    ) : <span className="text-zinc-300">—</span>}
+                    ) : <span className="text-zinc-300">-</span>}
                   </td>
                   <td className="font-mono text-sm">{iv.invoice_number}</td>
                   <td>{iv.invoice_date}</td>
                   <td>{iv.supplier_name}</td>
-                  <td className="text-zinc-500">{site?.name || "—"}</td>
+                  <td className="text-zinc-500">{site?.name || "-"}</td>
                   <td className="text-right bt-num">₹{inr(iv.subtotal)}</td>
                   <td className="text-right bt-num">₹{inr(iv.gst_amount)}</td>
                   <td className="text-right bt-num font-semibold">₹{inr(iv.total)}</td>
@@ -276,7 +276,7 @@ export default function Invoices() {
                 <div>
                   <div className="bt-eyebrow">{iv.invoice_date}</div>
                   <div className="font-display text-lg font-semibold">{iv.invoice_number}</div>
-                  <div className="text-sm text-zinc-500">{iv.supplier_name} · {site?.name || "—"}</div>
+                  <div className="text-sm text-zinc-500">{iv.supplier_name} · {site?.name || "-"}</div>
                 </div>
                 <div className="text-right">
                   <div className="bt-num font-bold text-lg">₹{inr(iv.total)}</div>

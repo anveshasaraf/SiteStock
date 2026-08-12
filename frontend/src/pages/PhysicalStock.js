@@ -135,7 +135,7 @@ export default function PhysicalStock() {
                       onChange={(e) => setCounts({ ...counts, [k]: e.target.value })}
                       className="h-9 text-right w-32 inline-block"
                       data-testid={`physical-input-${r.item_id}`}
-                      placeholder="—" />
+                      placeholder="-" />
                   </td>
                   <td className="text-center">
                     <input
@@ -162,7 +162,7 @@ export default function PhysicalStock() {
                     </button>
                   </td>
                   <td className="text-right bt-num">
-                    {v === null ? <span className="text-zinc-300">—</span> :
+                    {v === null ? <span className="text-zinc-300">-</span> :
                       v === 0 ? <span className="bt-badge bt-status-ok">Match</span> :
                       v > 0 ? <span className="text-emerald-700">+{fmt(v)}</span> :
                       <span className="text-red-700">{fmt(v)}</span>}
@@ -195,15 +195,15 @@ export default function PhysicalStock() {
                      h.variance > 0 ? <span className="text-emerald-700">+{fmt(h.variance)}</span> :
                      <span className="text-red-700">{fmt(h.variance)}</span>}
                   </td>
-                  <td className="text-zinc-500">{h.counted_by_name || "—"}</td>
+                  <td className="text-zinc-500">{h.counted_by_name || "-"}</td>
                   <td>
                     {h.photo_path ? (
                       <button onClick={() => openPreview(h.photo_path)} className="text-blue-600 inline-flex items-center gap-1" data-testid={`audit-photo-${h.id}`}>
                         <ImgIcon size={14} /> View
                       </button>
-                    ) : <span className="text-zinc-300">—</span>}
+                    ) : <span className="text-zinc-300">-</span>}
                   </td>
-                  <td>{h.adjusted ? <span className="bt-badge bt-status-high"><ArrowsClockwise size={12} className="mr-1" /> Yes</span> : <span className="text-zinc-400">—</span>}</td>
+                  <td>{h.adjusted ? <span className="bt-badge bt-status-high"><ArrowsClockwise size={12} className="mr-1" /> Yes</span> : <span className="text-zinc-400">-</span>}</td>
                 </tr>
               ))}
               {history.length === 0 && <tr><td colSpan={8} className="text-center text-zinc-500 py-10">No audits yet.</td></tr>}

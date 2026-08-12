@@ -101,7 +101,7 @@ export default function Users() {
                   <td className="font-medium">{u.name}</td>
                   <td className="text-zinc-500">{u.email}</td>
                   <td><span className={`bt-badge ${u.role === "admin" ? "bt-status-high" : "bt-status-ok"}`}>{u.role}</span></td>
-                  <td className="text-zinc-500">{u.role === "admin" ? "All" : site?.name || "—"}</td>
+                  <td className="text-zinc-500">{u.role === "admin" ? "All" : site?.name || "-"}</td>
                   <td className="text-right">{u.role !== "admin" && <button onClick={() => del(u.id)} className="text-zinc-500 hover:text-red-600"><Trash size={16} /></button>}</td>
                 </tr>
               );

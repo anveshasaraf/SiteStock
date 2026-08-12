@@ -3,7 +3,7 @@ import { Outlet, NavLink, useNavigate, useLocation, useParams } from "react-rout
 import { useAuth, api } from "../lib/auth";
 import {
   HardHat, House, Package, Truck, Receipt,
-  ArrowDown, ArrowUp, Fire, ChartBar,
+  ArrowDown, ArrowUp, Fire, ChartBar, Table,
   SignOut, List, X, ClipboardText, ArrowLeft,
   Lightning,
 } from "@phosphor-icons/react";
@@ -16,7 +16,7 @@ export const SiteContext = createContext({ site: null, role: null, refreshSite: 
 export const useSite = () => useContext(SiteContext);
 
 // ── Role-gated nav definitions ───────────────────────────────────────────────
-// Each entry specifies minRole — items only show if user has that role or higher.
+// Each entry specifies minRole - items only show if user has that role or higher.
 
 const ROLE_LEVEL = { viewer: 1, logger: 2, manager: 3, site_admin: 4 };
 
@@ -24,6 +24,7 @@ const NAV = [
   { to: "",              label: "Quick Log",       short: "Log",   icon: Lightning,     minRole: "logger"  },
   { to: "dashboard",     label: "Dashboard",       short: "Home",  icon: House,         minRole: "viewer"  },
   { to: "stock",         label: "Stock Register",  short: "Stock", icon: Package,       minRole: "viewer"  },
+  { to: "stock-summary", label: "Stock Summary",   short: "Sum",   icon: Table,         minRole: "viewer"  },
   { to: "physical-stock",label: "Physical Count",  short: "Audit", icon: ClipboardText, minRole: "logger"  },
   { to: "invoices",      label: "Purchase Bills",  short: "Bills", icon: Receipt,       minRole: "logger"  },
   { to: "inward",        label: "Inward Entry",    short: "In",    icon: ArrowDown,     minRole: "logger"  },

@@ -1,6 +1,6 @@
 {
   "short_name": "BuildTrack",
-  "name": "BuildTrack — Construction Inventory",
+  "name": "BuildTrack: Construction Inventory",
   "description": "Track materials, deliveries and stock across your construction sites.",
   "start_url": "/projects",
   "display": "standalone",

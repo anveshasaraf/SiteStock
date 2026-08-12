@@ -126,7 +126,7 @@ class TestInvoiceAtomicity:
 
 @pytest.mark.skipif(not DB_URL, reason="DATABASE_URL not set")
 class TestStockViewIntegration:
-    """Integration tests — requires a live Postgres with the schema applied."""
+    """Integration tests - requires a live Postgres with the schema applied."""
 
     @pytest.fixture(autouse=True)
     async def setup_db(self):

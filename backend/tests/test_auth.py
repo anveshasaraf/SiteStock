@@ -76,7 +76,7 @@ class TestProjectIsolation:
                 mock_pool.return_value.__aenter__ = AsyncMock(return_value=mock_conn)
                 r = client.get(f"/api/p/{SITE_A}/stock",
                                headers={"Authorization": f"Bearer {token}"})
-        # 200 or 500 (pool mocked minimally) — should NOT be 403
+        # 200 or 500 (pool mocked minimally) - should NOT be 403
         assert r.status_code != 403
 
     def test_viewer_blocked_from_other_site(self, client):

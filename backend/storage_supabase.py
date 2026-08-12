@@ -1,4 +1,4 @@
-"""Supabase Storage wrapper — replaces the Emergent object-storage integration."""
+"""Supabase Storage wrapper - replaces the Emergent object-storage integration."""
 import os
 import logging
 import uuid as _uuid

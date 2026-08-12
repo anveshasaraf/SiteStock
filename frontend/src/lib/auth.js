@@ -5,7 +5,7 @@ import { supabase } from "./supabase";
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 export const API = `${BACKEND_URL}/api`;
 
-// ── Axios instance — attaches Supabase access token as Bearer ────────────────
+// ── Axios instance - attaches Supabase access token as Bearer ────────────────
 
 export const api = axios.create({ baseURL: API });
 

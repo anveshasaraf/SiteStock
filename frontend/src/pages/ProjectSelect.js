@@ -62,7 +62,7 @@ export default function ProjectSelect() {
       <div className="mb-6">
         <div className="bt-eyebrow">Welcome back</div>
         <h1 className="font-display text-2xl sm:text-3xl font-bold tracking-tight mt-0.5">
-          {user?.name || "—"}
+          {user?.name || "-"}
         </h1>
         <p className="text-zinc-500 text-sm mt-1">Select a project to continue</p>
       </div>

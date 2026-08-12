@@ -1,4 +1,4 @@
-"""Asyncpg connection pool — single shared instance per process."""
+"""Asyncpg connection pool - single shared instance per process."""
 import os
 import asyncpg
 

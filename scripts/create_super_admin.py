@@ -62,7 +62,7 @@ async def main():
                       email = EXCLUDED.email,
                       is_super_admin = true
             """, user_id, args.name, args.email)
-            print(f"Profile upserted for {args.name} ({args.email}) — is_super_admin=true")
+            print(f"Profile upserted for {args.name} ({args.email}) - is_super_admin=true")
         finally:
             await conn.close()
 
@@ -72,7 +72,7 @@ async def main():
             f"{supabase_url}/auth/v1/admin/users/{user_id}/magiclink",
             headers=headers, timeout=15,
         )
-        print(f"Magic link sent to {args.email} — check inbox to set a password.")
+        print(f"Magic link sent to {args.email} - check inbox to set a password.")
     else:
         print(f"\nDone! Login at your app with email={args.email}")
 
